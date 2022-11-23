@@ -6,11 +6,16 @@ import 'package:flutter/services.dart';
 const channelName = 'flutter.oddbit.id/facebook_app_events';
 
 class FacebookAppEvents {
+  static final FacebookAppEvents _instance = FacebookAppEvents._();
+
+  static FacebookAppEvents get instance => _instance;
+
+  FacebookAppEvents._();
+
   static const _channel = MethodChannel(channelName);
 
   // See: https://github.com/facebook/facebook-android-sdk/blob/master/facebook-core/src/main/java/com/facebook/appevents/AppEventsConstants.java
-  static const eventNameCompletedRegistration =
-      'fb_mobile_complete_registration';
+  static const eventNameCompletedRegistration = 'fb_mobile_complete_registration';
   static const eventNameViewedContent = 'fb_mobile_content_view';
   static const eventNameRated = 'fb_mobile_rate';
   static const eventNameInitiatedCheckout = 'fb_mobile_initiated_checkout';
@@ -284,8 +289,7 @@ class FacebookAppEvents {
         paramNameContentId: contentId,
         paramNameNumItems: numItems,
         paramNameCurrency: currency,
-        paramNamePaymentInfoAvailable:
-            paymentInfoAvailable ? paramValueYes : paramValueNo,
+        paramNamePaymentInfoAvailable: paymentInfoAvailable ? paramValueYes : paramValueNo,
       },
     );
   }
