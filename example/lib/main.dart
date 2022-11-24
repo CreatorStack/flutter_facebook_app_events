@@ -4,7 +4,7 @@ import 'package:facebook_app_events/facebook_app_events.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  static final facebookAppEvents = FacebookAppEvents();
+  static final facebookAppEvents = FacebookAppEvents.instance;
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
