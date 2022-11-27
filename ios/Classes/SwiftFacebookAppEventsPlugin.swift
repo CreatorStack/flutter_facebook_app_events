@@ -3,6 +3,7 @@ import UIKit
 import FBSDKCoreKit
 import FBSDKCoreKit_Basics
 import FBAudienceNetwork
+import AppTrackingTransparency
 
 public class SwiftFacebookAppEventsPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -26,7 +27,53 @@ public class SwiftFacebookAppEventsPlugin: NSObject, FlutterPlugin {
             options[key] = value
         }
         ApplicationDelegate.shared.application(application,didFinishLaunchingWithOptions: options)
+        
+        // Logging Behavior, uncomment for debugging
+        //        Settings.shared.enableLoggingBehavior(.appEvents)
+        //        Settings.shared.enableLoggingBehavior(.appEvents)
+        //        Settings.shared.enableLoggingBehavior(.networkRequests)
+        //        Settings.shared.enableLoggingBehavior(.developerErrors)
+        //        Settings.shared.enableLoggingBehavior(.graphAPIDebugInfo)
+        //        Settings.shared.enableLoggingBehavior(.accessTokens)
+        
+        // Settings
+        Settings.shared.isAutoLogAppEventsEnabled = true
+        Settings.shared.isAdvertiserTrackingEnabled = true
+        Settings.shared.isAdvertiserIDCollectionEnabled = true
+        requestTracking()
         return true
+    }
+    
+    
+    @objc private func requestTrackingAuthorization() {
+        print("ATTracking: Requesting for iOS 14+")
+        if #available(iOS 14, *) {
+            ATTrackingManager.requestTrackingAuthorization(completionHandler: { (status) in
+                switch status{
+                case .authorized:
+                    print("ATTracking: authorized")
+                    Settings.shared.isAdvertiserTrackingEnabled = true
+                    break
+                case .denied:
+                    print("ATTracking: denied")
+                    Settings.shared.isAdvertiserTrackingEnabled = false
+                    break
+                default:
+                    print("ATTracking: status = \(status)")
+                    Settings.shared.isAdvertiserTrackingEnabled = false
+                    break
+                }
+            })
+        }
+    }
+    
+    func requestTracking() {
+        //Added a 2 seconds delay as the pop up doesn't opens immediately.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: {
+            if #available(iOS 14, *) {
+                NotificationCenter.default.addObserver(self, selector: #selector(self.requestTrackingAuthorization), name: UIApplication.didBecomeActiveNotification, object: nil)
+            }
+        })
     }
     
     public func application( _ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:] ) -> Bool {
