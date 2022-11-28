@@ -4,6 +4,7 @@ import FBSDKCoreKit
 import FBSDKCoreKit_Basics
 import FBAudienceNetwork
 import AppTrackingTransparency
+import FBAEMKit
 
 public class SwiftFacebookAppEventsPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -77,10 +78,21 @@ public class SwiftFacebookAppEventsPlugin: NSObject, FlutterPlugin {
     }
     
     public func application( _ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:] ) -> Bool {
+        
+        // Pass DeepLink URL to iOS SDK
         let processed = ApplicationDelegate.shared.application(
             app, open: url,
             sourceApplication: options[UIApplication.OpenURLOptionsKey.sourceApplication] as? String,
             annotation: options[UIApplication.OpenURLOptionsKey.annotation])
+        
+        let facebookAppID = Bundle.main.object(forInfoDictionaryKey: "FacebookAppID") as? String;
+        
+        if (facebookAppID != nil) {
+            AEMReporter.configure(withNetworker: nil, appID: facebookAppID, reporter: nil);
+            AEMReporter.enable()
+            AEMReporter.handle(url)
+        }
+        
         return processed;
     }
 
@@ -177,10 +189,11 @@ public class SwiftFacebookAppEventsPlugin: NSObject, FlutterPlugin {
         if arguments["_valueToSum"] != nil && !(arguments["_valueToSum"] is NSNull) {
             let valueToDouble = arguments["_valueToSum"] as! Double
             AppEvents.shared.logEvent(AppEvents.Name(eventName), valueToSum: valueToDouble, parameters: parameters)
+            AEMReporter.recordAndUpdate(event: eventName, currency: nil, value: nil, parameters: arguments["parameters"] as? [String: Any])
         } else {
             AppEvents.shared.logEvent(AppEvents.Name(eventName), parameters: parameters)
         }
-
+        
         result(nil)
     }
 
